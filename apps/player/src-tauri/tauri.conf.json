@@ -1,6 +1,6 @@
 {
   "$schema":"https://schema.tauri.app/config/2",
-  "productName":"LumaWindow", "version":"0.1.3", "identifier":"app.lumawindow.desktop",
+  "productName":"LumaWindow", "version":"0.2.0", "identifier":"app.lumawindow.desktop",
   "build":{"beforeDevCommand":"pnpm --dir ../.. dev","devUrl":"http://localhost:5173","beforeBuildCommand":"pnpm --dir ../.. build","frontendDist":"../dist"},
   "app":{"windows":[{"label":"main","title":"LumaWindow · 云海列车","width":1280,"height":720,"minWidth":360,"minHeight":500}],"security":{"csp":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ipc: http://ipc.localhost; media-src 'self' blob:"}},
   "bundle":{"active":true,"targets":["nsis","dmg"],"icon":[],"macOS":{"minimumSystemVersion":"11.0"}}

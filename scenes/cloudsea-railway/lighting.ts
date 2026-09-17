@@ -1,96 +1,96 @@
 import { Color } from "three";
 import { wrap } from "./day-cycle";
-// Top sky, horizon, cloud shadow, body, light, rock shadow, rock light.
+// Sky, horizon, cloud shade/body/light, rock shade/light; authored in sRGB.
 const keys = [
   [
     0,
-    "#13233f",
-    "#67758e",
-    "#343e63",
-    "#687798",
-    "#b3b6cb",
-    "#152940",
-    "#465d7c",
+    "#142740",
+    "#8b86a9",
+    "#4c557e",
+    "#8997b8",
+    "#e1d7d5",
+    "#182f42",
+    "#727c9d",
   ],
   [
-    0.2,
-    "#536987",
-    "#c79ba4",
-    "#646685",
-    "#b9a1b1",
-    "#f4d1be",
-    "#36435f",
-    "#7e7a91",
+    0.18,
+    "#445c86",
+    "#dba0ab",
+    "#786786",
+    "#bb9db3",
+    "#f8d2b4",
+    "#304858",
+    "#968899",
   ],
   [
     0.3,
-    "#7a9ec4",
-    "#ffe0ad",
-    "#7a7e9e",
-    "#e7b6ad",
-    "#fff0d1",
-    "#435878",
-    "#aa8b9a",
+    "#77a5bd",
+    "#f8d1a8",
+    "#89788f",
+    "#e2b6af",
+    "#ffedc8",
+    "#314c5c",
+    "#ad8f97",
   ],
   [
     0.48,
-    "#659cc8",
-    "#cbdde3",
-    "#7f93ae",
-    "#d3d5dc",
-    "#fff6dd",
-    "#365c78",
-    "#839aab",
+    "#5798b6",
+    "#ddded0",
+    "#8290b0",
+    "#d4cfcd",
+    "#fff0cd",
+    "#294b57",
+    "#899ba7",
   ],
   [
     0.62,
-    "#759bc7",
-    "#ffdbab",
-    "#88839f",
-    "#edb9b0",
-    "#fff0cf",
-    "#455676",
-    "#aa8d9a",
+    "#6d9dbc",
+    "#f8d4ae",
+    "#8c829f",
+    "#e8bab0",
+    "#ffe9be",
+    "#354959",
+    "#aa929e",
   ],
   [
     0.74,
-    "#6885b3",
-    "#ffc980",
-    "#786b91",
-    "#eea295",
-    "#ffe3b4",
-    "#364760",
-    "#b17f8a",
+    "#6c86b2",
+    "#fbc08c",
+    "#94768f",
+    "#eeae99",
+    "#ffe3ae",
+    "#394252",
+    "#b48f9a",
   ],
   [
     0.84,
-    "#384f7b",
-    "#d7999a",
-    "#4a507c",
-    "#9586ab",
-    "#efb99e",
-    "#263b59",
-    "#696581",
+    "#374c7a",
+    "#d9999f",
+    "#645b8c",
+    "#a190b2",
+    "#efd1c6",
+    "#28374e",
+    "#89849e",
   ],
   [
     0.94,
-    "#182d50",
-    "#8491a7",
-    "#394668",
-    "#7d88ab",
-    "#c8c4d5",
-    "#1a2d48",
-    "#536886",
+    "#1c3053",
+    "#9093b6",
+    "#515b86",
+    "#929bbe",
+    "#e4d7da",
+    "#1b3046",
+    "#757f9f",
   ],
   [
     1,
-    "#13233f",
-    "#67758e",
-    "#343e63",
-    "#687798",
-    "#b3b6cb",
-    "#152940",
-    "#465d7c",
+    "#142740",
+    "#8b86a9",
+    "#4c557e",
+    "#8997b8",
+    "#e1d7d5",
+    "#182f42",
+    "#727c9d",
   ],
 ] as const;
 const stops = keys.map(([time, ...colors]) => ({
@@ -99,31 +99,78 @@ const stops = keys.map(([time, ...colors]) => ({
 }));
 export function createLighting() {
   const colors = Array.from({ length: 7 }, () => new Color());
-  const targetColors = Array.from({ length: 7 }, () => new Color());
+  const targets = colors.map(() => new Color());
+  const roles = {
+    cloudNearShade: new Color(),
+    cloudNearBody: new Color(),
+    cloudFarShade: new Color(),
+    rockNear: new Color(),
+    rockMiddle: new Color(),
+    rockFar: new Color(),
+    carriage: new Color(),
+    carriageLight: new Color(),
+    roof: new Color(),
+    undercarriage: new Color(),
+    brass: new Color(),
+    window: new Color(),
+    windowDim: new Color(),
+    steam: new Color(),
+  };
+  const green = new Color("#274841"),
+    greenLight = new Color("#59746a"),
+    charcoal = new Color("#25323b"),
+    brass = new Color("#998364"),
+    dayGlass = new Color("#abb9ad"),
+    nightGlass = new Color("#f9c786"),
+    violet = new Color("#716489"),
+    blue = new Color("#7598b8");
   return {
     colors,
+    roles,
     night: 0,
     sunY: 0,
     update(phase: number, blend = 1) {
       const t = wrap(phase);
       let i = 0;
       while (i < stops.length - 2 && stops[i + 1].time < t) i++;
-      const f = (t - stops[i].time) / (stops[i + 1].time - stops[i].time);
-      const s = f * f * (3 - 2 * f);
-      colors.forEach((color, j) => {
-        targetColors[j]
-          .copy(stops[i].colors[j])
-          .lerp(stops[i + 1].colors[j], s);
-        color.lerp(targetColors[j], blend);
+      const f = (t - stops[i].time) / (stops[i + 1].time - stops[i].time),
+        s = f * f * (3 - 2 * f);
+      colors.forEach((c, j) => {
+        targets[j].copy(stops[i].colors[j]).lerp(stops[i + 1].colors[j], s);
+        c.lerp(targets[j], blend);
       });
-      const dusk = Math.max(0, Math.min(1, (t - 0.77) / 0.15));
-      const dawn = Math.max(0, Math.min(1, (t - 0.16) / 0.16));
-      const targetNight =
+      const dusk = Math.max(0, Math.min(1, (t - 0.77) / 0.15)),
+        dawn = Math.max(0, Math.min(1, (t - 0.16) / 0.16));
+      const night =
         t > 0.5
           ? dusk * dusk * (3 - 2 * dusk)
           : 1 - dawn * dawn * (3 - 2 * dawn);
-      this.night += (targetNight - this.night) * blend;
+      this.night += (night - this.night) * blend;
       this.sunY += (Math.sin((t - 0.25) * Math.PI * 2) - this.sunY) * blend;
+      const [sky, horizon, shade, body, light, rock, rockLight] = colors;
+      roles.cloudNearShade.copy(shade).lerp(violet, 0.19).multiplyScalar(0.68);
+      roles.cloudNearBody.copy(body).lerp(shade, 0.32);
+      roles.cloudFarShade.copy(shade).lerp(horizon, 0.27);
+      roles.rockNear.copy(rock).multiplyScalar(0.63);
+      roles.rockMiddle.copy(rockLight).lerp(rock, 0.38);
+      roles.rockFar.copy(rockLight).lerp(horizon, 0.3).lerp(blue, 0.1);
+      roles.carriage
+        .copy(green)
+        .lerp(rock, 0.28)
+        .multiplyScalar(1 - this.night * 0.28);
+      roles.carriageLight
+        .copy(greenLight)
+        .lerp(light, 0.055)
+        .multiplyScalar(1 - this.night * 0.38);
+      roles.roof.copy(charcoal).lerp(sky, 0.18);
+      roles.undercarriage.copy(rock).multiplyScalar(0.36);
+      roles.brass
+        .copy(brass)
+        .lerp(light, 0.1)
+        .multiplyScalar(0.63 - this.night * 0.12);
+      roles.window.copy(dayGlass).lerp(nightGlass, this.night);
+      roles.windowDim.copy(roles.window).lerp(roles.carriage, 0.44);
+      roles.steam.copy(body).lerp(light, 0.67);
     },
   };
 }

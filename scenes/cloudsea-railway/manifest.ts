@@ -1,7 +1,7 @@
 import type { Variant } from "../../packages/scene-sdk/src";
 export const manifest = {
   id: "cloudsea-railway",
-  version: "0.3.0",
+  version: "0.4.0",
   sdkVersion: 1,
   name: "云海列车",
   baseVariantId: "side",

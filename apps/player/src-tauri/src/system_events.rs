@@ -96,12 +96,114 @@ mod windows {
     }
 }
 
+#[cfg(target_os = "macos")]
+mod macos {
+    use super::LifecycleStatus;
+    use std::{
+        ffi::c_void,
+        sync::atomic::{AtomicU32, Ordering},
+    };
+    use tauri::{Emitter, Manager};
+    static SUSPENDED: AtomicU32 = AtomicU32::new(0);
+    const EVENTS: [&str; 10] = [
+        "system-suspend",
+        "system-resume",
+        "screen-sleep",
+        "screen-wake",
+        "session-lock",
+        "session-unlock",
+        "minimized",
+        "restored",
+        "occluded",
+        "visible",
+    ];
+    extern "C" {
+        fn lm_install_lifecycle(
+            window: *mut c_void,
+            context: *mut c_void,
+            callback: unsafe extern "C" fn(*mut c_void, i32),
+        ) -> bool;
+    }
+    unsafe extern "C" fn notify(context: *mut c_void, code: i32) {
+        if code == 99 {
+            drop(Box::from_raw(context as *mut tauri::AppHandle));
+            return;
+        }
+        let app = &*(context as *const tauri::AppHandle);
+        if (0..10).contains(&code) {
+            let bit = 1 << (code / 2);
+            if code % 2 == 0 {
+                SUSPENDED.fetch_or(bit, Ordering::SeqCst);
+            } else {
+                SUSPENDED.fetch_and(!bit, Ordering::SeqCst);
+            }
+            let _ = app.emit_to("main", "system-event", EVENTS[code as usize]);
+        } else if code == 11 {
+            let _ = app.emit("system-event", "displays-changed");
+        }
+    }
+    pub fn install(window: &tauri::WebviewWindow) -> LifecycleStatus {
+        let mut status = LifecycleStatus {
+            platform: "macos",
+            bridge_installed: false,
+            session_notifications: false,
+            error: None,
+        };
+        match window.ns_window() {
+            Ok(handle) => {
+                let context = Box::into_raw(Box::new(window.app_handle().clone())) as *mut c_void;
+                let ok = unsafe { lm_install_lifecycle(handle, context, notify) };
+                if !ok {
+                    unsafe {
+                        drop(Box::from_raw(context as *mut tauri::AppHandle));
+                    }
+                    status.error = Some("macOS observers require the main thread".into());
+                }
+                status.bridge_installed = ok;
+                status.session_notifications = ok;
+            }
+            Err(error) => status.error = Some(error.to_string()),
+        }
+        status
+    }
+    pub fn sync(app: &tauri::AppHandle) {
+        let mask = SUSPENDED.load(Ordering::SeqCst);
+        for i in 0..5 {
+            let _ = app.emit_to(
+                "main",
+                "system-event",
+                EVENTS[i * 2 + usize::from(mask & (1 << i) == 0)],
+            );
+        }
+    }
+}
+
+// Subscribe in JS first, then replay state on the same native queue as observers.
+#[tauri::command]
+pub fn sync_lifecycle(window: tauri::WebviewWindow) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        use tauri::Manager;
+        let app = window.app_handle().clone();
+        window
+            .run_on_main_thread(move || macos::sync(&app))
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = window;
+    Ok(())
+}
+
 pub fn install(window: &tauri::WebviewWindow) -> LifecycleStatus {
     #[cfg(windows)]
     {
         windows::install(window)
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        macos::install(window)
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
     {
         let _ = window;
         LifecycleStatus {

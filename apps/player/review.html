@@ -1,25 +1,139 @@
 <!doctype html>
-<html lang="zh-CN"><meta charset="utf-8"><title>LumaWindow 动态验收录制</title>
-<style>html,body,canvas{margin:0;width:100%;height:100%;display:block;overflow:hidden;background:#19263b}nav{position:fixed;top:20px;left:20px;padding:12px;background:#fff9;border-radius:8px;font:14px system-ui}button,a{padding:8px}video{position:fixed;bottom:10px;right:10px;width:280px}output{padding:8px}</style>
-<canvas aria-label="动态验收云海"></canvas><nav><select aria-label="录制时长"><option value="60">一分钟快速验收</option><option value="300">五分钟动态</option><option value="1800">三十分钟完整昼夜</option></select><select aria-label="验收昼夜周期"><option value="1">1分钟昼夜（开发）</option><option value="30">30分钟昼夜（正式速度）</option></select><button id="record" disabled>开始录制</button><output>载入中</output><a hidden download="LumaWindow-cloudsea.webm">保存录屏</a></nav><video hidden controls aria-label="场景录屏"></video>
-<script type="module">
-// Development-only recording harness. Not a Vite production entry or native feature.
-import {SceneEngine} from '../../packages/scene-engine/src/index.ts';
-import {defaults} from '../../scenes/cloudsea-railway/params.ts';
-const canvas=document.querySelector('canvas'),button=document.querySelector('button'),output=document.querySelector('output');
-const engine=new SceneEngine(canvas,error=>output.textContent=error);
-engine.start();await engine.load(()=>import('../../scenes/cloudsea-railway/scene.ts'),'side',8472,defaults);
-button.disabled=false;output.textContent='选择验收速度后开始；开发快进不改变正式程序默认值。仅录制画布，无声音';
-new ResizeObserver(()=>engine.resize()).observe(canvas);
-button.onclick=()=>{
- const chunks=[],stream=canvas.captureStream(20);
- const options=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:1800000}:{mimeType:'video/webm',videoBitsPerSecond:1800000};
- const recorder=new MediaRecorder(stream,options),duration=Number(document.querySelector('[aria-label="录制时长"]').value),start=engine.clock.elapsed;button.disabled=true;document.querySelectorAll('select').forEach(select=>select.disabled=true);
- engine.setParams({...defaults,cycleMinutes:Number(document.querySelector('[aria-label="验收昼夜周期"]').value),timeRequest:1});
- recorder.ondataavailable=event=>{if(event.data.size)chunks.push(event.data);};
- const timer=setInterval(()=>{const seconds=engine.clock.elapsed-start;output.textContent='有效播放 '+seconds.toFixed(1)+' / '+duration+' 秒';if(seconds>=duration&&recorder.state==='recording')recorder.stop();},1000);
- recorder.onstop=()=>{clearInterval(timer);stream.getTracks().forEach(t=>t.stop());const blob=new Blob(chunks,{type:recorder.mimeType});chunks.length=0;const url=URL.createObjectURL(blob);const video=document.querySelector('video'),link=document.querySelector('a');video.src=url;video.hidden=false;link.href=url;link.hidden=false;output.textContent='录制完成，'+(blob.size/1048576).toFixed(1)+' MiB';engine.paused=true;};
- recorder.start(1000);
-};
-addEventListener('pagehide',()=>engine.dispose());
-</script></html>
+<html lang="zh-CN">
+  <meta charset="utf-8" /><title>LumaWindow 动态验收录制</title>
+  <style>
+    html,
+    body,
+    canvas {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: hidden;
+      background: #19263b;
+    }
+    nav {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 12px;
+      background: #fff9;
+      border-radius: 8px;
+      font: 14px system-ui;
+    }
+    button,
+    a {
+      padding: 8px;
+    }
+    video {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      width: 280px;
+    }
+    output {
+      padding: 8px;
+    }
+  </style>
+  <canvas aria-label="动态验收云海"></canvas>
+  <nav>
+    <select aria-label="录制时长">
+      <option value="60">一分钟快速验收</option>
+      <option value="180">三分钟自然行进</option>
+      <option value="300">五分钟动态</option>
+      <option value="1800">三十分钟完整昼夜</option></select
+    ><select aria-label="验收昼夜周期">
+      <option value="1">1分钟昼夜（开发）</option>
+      <option value="30">30分钟昼夜（正式速度）</option></select
+    ><button id="record" disabled>开始录制</button><output>载入中</output
+    ><a hidden download="LumaWindow-cloudsea.webm">保存录屏</a>
+  </nav>
+  <video hidden controls aria-label="场景录屏"></video>
+  <script type="module">
+    // Development-only recording harness. Not a Vite production entry or native feature.
+    import { SceneEngine } from "../../packages/scene-engine/src/index.ts";
+    import { defaults } from "../../scenes/cloudsea-railway/params.ts";
+    const canvas = document.querySelector("canvas"),
+      button = document.querySelector("button"),
+      output = document.querySelector("output");
+    const engine = new SceneEngine(
+      canvas,
+      (error) => (output.textContent = error),
+    );
+    engine.start();
+    await engine.load(
+      () => import("../../scenes/cloudsea-railway/scene.ts"),
+      "side",
+      8472,
+      defaults,
+    );
+    button.disabled = false;
+    output.textContent =
+      "选择验收速度后开始；开发快进不改变正式程序默认值。仅录制画布，无声音";
+    new ResizeObserver(() => engine.resize()).observe(canvas);
+    button.onclick = () => {
+      const chunks = [],
+        stream = canvas.captureStream(20);
+      const options = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+        ? { mimeType: "video/webm;codecs=vp9", videoBitsPerSecond: 1800000 }
+        : { mimeType: "video/webm", videoBitsPerSecond: 1800000 };
+      const recorder = new MediaRecorder(stream, options),
+        duration = Number(
+          document.querySelector('[aria-label="录制时长"]').value,
+        ),
+        start = engine.clock.elapsed;
+      button.disabled = true;
+      document
+        .querySelectorAll("select")
+        .forEach((select) => (select.disabled = true));
+      engine.setParams({
+        ...defaults,
+        cycleMinutes: Number(
+          document.querySelector('[aria-label="验收昼夜周期"]').value,
+        ),
+        timeRequest: 1,
+      });
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) chunks.push(event.data);
+      };
+      const timer = setInterval(() => {
+        const seconds = engine.clock.elapsed - start;
+        output.textContent =
+          "有效播放 " + seconds.toFixed(1) + " / " + duration + " 秒";
+        if (seconds >= duration && recorder.state === "recording")
+          recorder.stop();
+      }, 1000);
+      recorder.onstop = async () => {
+        clearInterval(timer);
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: recorder.mimeType });
+        chunks.length = 0;
+        const url = URL.createObjectURL(blob);
+        const video = document.querySelector("video"),
+          link = document.querySelector("a");
+        video.src = url;
+        video.hidden = false;
+        link.href = url;
+        link.hidden = false;
+        output.textContent =
+          "录制完成，" + (blob.size / 1048576).toFixed(1) + " MiB";
+        engine.paused = true;
+        if (new URLSearchParams(location.search).get("localCapture") === "1") {
+          try {
+            const response = await fetch("http://127.0.0.1:5186/capture", {
+              method: "POST",
+              headers: { "Content-Type": recorder.mimeType },
+              body: blob,
+            });
+            if (!response.ok) throw Error(response.status);
+            output.textContent += " · 已保存到本地录制目录";
+          } catch (error) {
+            output.textContent += " · 本地保存失败：" + error;
+          }
+        }
+      };
+      recorder.start(1000);
+    };
+    addEventListener("pagehide", () => engine.dispose());
+  </script>
+</html>

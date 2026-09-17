@@ -1,11 +1,12 @@
 [package]
 name = "lumawindow"
-version = "0.1.3"
+version = "0.2.0"
 description = "A calm second screen"
 edition = "2021"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+cc = "1"
 
 [dependencies]
 tauri = { version = "2", features = [] }

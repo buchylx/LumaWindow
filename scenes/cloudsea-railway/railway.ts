@@ -1,15 +1,17 @@
 import * as T from "three";
 import { fogAtDepth, railwayDepth } from "./depth";
+import { createPassengerTrain } from "./train";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { createLighting } from "./lighting";
 
 /** Artificial structures share precise architectural modules; nature does not. */
 export function createRailway() {
   const group = new T.Group(),
-    train = new T.Group();
+    passengerTrain = createPassengerTrain(),
+    train = passengerTrain.group;
   group.add(train);
   const materials = Array.from(
-    { length: 8 },
+    { length: 4 },
     () =>
       new T.MeshBasicMaterial({
         transparent: true,
@@ -17,10 +19,9 @@ export function createRailway() {
         depthWrite: false,
       }),
   );
-  const [stone, stoneLight, mortar, iron, body, trim, glass, roof] = materials;
+  const [stone, stoneLight, mortar, iron] = materials;
   const geometries: T.BufferGeometry[] = [];
   const bridgeParts: T.BufferGeometry[][] = [[], [], [], []];
-  const trainParts: T.BufferGeometry[][] = [[], [], [], []];
   function rect(
     parts: T.BufferGeometry[][],
     layer: number,
@@ -44,17 +45,6 @@ export function createRailway() {
     points.forEach(([x, y], i) => (i ? s.lineTo(x, y) : s.moveTo(x, y)));
     s.closePath();
     parts[layer].push(new T.ShapeGeometry(s));
-  }
-  function circle(
-    parts: T.BufferGeometry[][],
-    layer: number,
-    x: number,
-    y: number,
-    r: number,
-  ) {
-    const g = new T.CircleGeometry(r, 20);
-    g.translate(x, y, 0);
-    parts[layer].push(g);
   }
   function line(
     parts: T.BufferGeometry[][],
@@ -128,105 +118,6 @@ export function createRailway() {
   rect(bridgeParts, 3, 0, 2, 210, 1.5);
   rect(bridgeParts, 3, 0, 8, 210, 0.9);
   for (let j = 0; j < 21; j++) rect(bridgeParts, 3, -100 + j * 10, 5, 0.6, 6);
-  // Ten narrow coaches: body height and train length deliberately independent.
-  for (let i = 0; i < 10; i++) {
-    const x = -61 - i * 52;
-    poly(trainParts, 0, [
-      [x - 24, 6],
-      [x + 24, 6],
-      [x + 24, 20],
-      [x + 21, 23],
-      [x - 21, 23],
-      [x - 24, 20],
-    ]);
-    rect(trainParts, 3, x, 23, 47, 2.2);
-    rect(trainParts, 1, x, 6, 49, 1.2);
-    rect(trainParts, 1, x, 11, 47, 0.55);
-    rect(trainParts, 1, x, 20.5, 45, 0.6);
-    rect(trainParts, 0, x - 25, 8, 5, 1);
-    rect(trainParts, 1, x - 21, 14, 0.65, 14);
-    rect(trainParts, 1, x + 21, 14, 0.65, 14);
-    for (let j = 0; j < 8; j++) {
-      const wx = x - 17.5 + j * 5;
-      rect(trainParts, 1, wx, 16.4, 3.8, 6.6);
-      rect(trainParts, 2, wx, 16.6, 2.9, 5.3);
-      rect(trainParts, 0, wx, 17, 0.3, 5.5);
-    }
-    for (const dx of [-16, -11, 11, 16]) {
-      circle(trainParts, 0, x + dx, 3.6, 2.8);
-      circle(trainParts, 1, x + dx, 3.6, 0.8);
-    }
-    rect(trainParts, 1, x - 13.5, 4, 9, 0.75);
-    rect(trainParts, 1, x + 13.5, 4, 9, 0.75);
-    rect(trainParts, 3, x - 13, 25, 3, 1.5);
-    rect(trainParts, 3, x + 13, 25, 3, 1.5);
-  }
-  // Tender, cab, boiler bands, bell, chimney, buffers and cattle guard.
-  poly(trainParts, 0, [
-    [-36, 6],
-    [-10, 6],
-    [-9, 22],
-    [-35, 22],
-  ]);
-  poly(trainParts, 3, [
-    [-34, 22],
-    [-31, 25],
-    [-28, 24],
-    [-23, 26],
-    [-18, 24],
-    [-11, 23],
-  ]);
-  rect(trainParts, 1, -23, 12, 22, 0.7);
-  rect(trainParts, 1, -23, 21, 28, 1.2);
-  poly(trainParts, 0, [
-    [-9, 6],
-    [10, 6],
-    [10, 29],
-    [-9, 29],
-  ]);
-  rect(trainParts, 3, 0, 30, 24, 2.2);
-  rect(trainParts, 1, 0, 23, 12, 9);
-  rect(trainParts, 2, 0, 23, 9, 6.5);
-  rect(trainParts, 0, 0, 23, 0.7, 7);
-  rect(trainParts, 0, 27, 17, 38, 14);
-  circle(trainParts, 0, 46, 17, 7);
-  rect(trainParts, 1, 29, 22.2, 34, 1.1);
-  rect(trainParts, 3, 28, 11, 35, 1.3);
-  for (const x of [17, 29, 41]) rect(trainParts, 1, x, 17, 0.9, 12.5);
-  poly(trainParts, 0, [
-    [36, 22],
-    [41, 22],
-    [42, 36],
-    [35, 36],
-  ]);
-  rect(trainParts, 1, 38.5, 36, 10, 2);
-  circle(trainParts, 0, 19, 26, 3.8);
-  rect(trainParts, 0, 19, 24, 8, 5);
-  rect(trainParts, 1, 27, 28, 4, 2);
-  rect(trainParts, 1, 27, 25, 1, 4);
-  rect(trainParts, 1, 20, 7, 69, 2);
-  rect(trainParts, 0, 50, 8, 5, 2);
-  poly(trainParts, 3, [
-    [45, 7],
-    [56, 1],
-    [46, 1],
-  ]);
-  rect(trainParts, 1, 48, 21, 3, 5);
-  rect(trainParts, 2, 50, 21, 1.8, 3);
-  for (const [x, r] of [
-    [-31, 3.5],
-    [-16, 3.5],
-    [10, 6],
-    [23, 6],
-    [36, 6],
-    [46, 3],
-  ] as const) {
-    circle(trainParts, 0, x, 5, r);
-    circle(trainParts, 1, x, 5, r * 0.75);
-    circle(trainParts, 0, x, 5, r * 0.56);
-    circle(trainParts, 1, x, 5, 0.7);
-  }
-  rect(trainParts, 1, 23, 4, 27, 0.8);
   const bridges: T.InstancedMesh[] = [];
   function batch(
     parts: T.BufferGeometry[][],
@@ -249,11 +140,8 @@ export function createRailway() {
     });
   }
   batch(bridgeParts, [stone, stoneLight, mortar, iron], group, 40, true);
-  batch(trainParts, [body, trim, glass, roof], train, 48);
   const chimney = new T.Vector3(),
     matrix = new T.Matrix4();
-  const nightWindow = new T.Color("#ffd294"),
-    dayWindow = new T.Color("#bfa089");
   return {
     group,
     train,
@@ -277,18 +165,19 @@ export function createRailway() {
         mesh.instanceMatrix.needsUpdate = true;
       });
       train.position.set(225, 3, 0);
-      train.scale.setScalar(0.86);
-      chimney.set(225 + 38.5 * 0.86, -140 + 3 + 37 * 0.86, 0);
+      train.scale.setScalar(0.82);
+      chimney
+        .copy(passengerTrain.chimney)
+        .multiplyScalar(0.82)
+        .add(train.position)
+        .add(group.position);
       stone.color.copy(light.colors[5]).lerp(light.colors[2], 0.4);
       stoneLight.color.copy(light.colors[6]).lerp(light.colors[4], 0.12);
       mortar.color.copy(stone.color).multiplyScalar(0.83);
       iron.color.copy(light.colors[5]).multiplyScalar(0.63);
-      body.color.copy(light.colors[5]).multiplyScalar(0.55);
-      trim.color.copy(light.colors[6]).lerp(light.colors[4], 0.04);
-      roof.color.copy(light.colors[5]).multiplyScalar(0.78);
-      glass.color.copy(dayWindow).lerp(nightWindow, light.night);
       const veil = fogAtDepth(fog, railwayDepth) * 0.28;
-      for (const mat of [stone, stoneLight, mortar, iron, body, trim, roof]) {
+      passengerTrain.update(light, veil);
+      for (const mat of [stone, stoneLight, mortar, iron]) {
         mat.color.lerp(light.colors[1], veil);
       }
     },
@@ -296,6 +185,7 @@ export function createRailway() {
       bridges.forEach((m) => m.dispose());
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
+      passengerTrain.dispose();
     },
   };
 }

@@ -113,7 +113,7 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
       smokeIndex = 0;
     function paint(blend = 1) {
       lighting.update(clock.phase, blend);
-      const [top, horizon, , body, light] = lighting.colors;
+      const [top, horizon, , , light] = lighting.colors;
       const u = sky.material.uniforms;
       u.top.value.copy(top);
       u.horizon.value.copy(horizon);
@@ -137,7 +137,7 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
       );
       railway.update(distance, halfWidth, params.framing, lighting, params.fog);
       smoke.forEach((s) =>
-        s.mesh.material.uniforms.color.value.copy(body).lerp(light, 0.58),
+        s.mesh.material.uniforms.color.value.copy(lighting.roles.steam),
       );
     }
     function projection() {
@@ -185,19 +185,19 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
       windDistance += f.delta * 2.2 * motion;
       projection();
       paint(ease);
-      smokeTimer += f.delta;
-      if (smokeTimer > 1.3 + Math.sin(elapsed * 0.18) * 0.4) {
+      smokeTimer += f.delta * motion;
+      if (smokeTimer > 0.8 + Math.max(0, Math.sin(elapsed * 0.22)) * 0.8) {
         smokeTimer = 0;
         const s = smoke[smokeIndex++ % smoke.length];
         s.age = 0;
-        s.life = 8 + smokeRandom() * 3;
+        s.life = 11 + smokeRandom() * 3;
         s.x = railway.chimney.x;
         s.y = railway.chimney.y;
-        s.size = 14 + smokeRandom() * 9;
+        s.size = 10 + smokeRandom() * 4;
       }
       for (const s of smoke) {
         if (s.age < 0) continue;
-        s.age += f.delta;
+        s.age += f.delta * motion;
         const t = s.age / s.life;
         if (t >= 1) {
           s.age = -1;
@@ -206,12 +206,16 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
         }
         s.mesh.visible = true;
         s.mesh.position.set(
-          s.x - s.age * (8 + params.speed * 28),
-          s.y + s.age * 5,
+          s.x - s.age * (13 + params.speed * 34),
+          s.y + s.age * 3.2 + Math.sin(s.age * 0.55) * 1.3,
           0,
         );
-        s.mesh.scale.set(s.size * (1 + t * 2.7), s.size * (0.7 + t * 1.5), 1);
-        s.mesh.material.uniforms.opacity.value = Math.sin(Math.PI * t) * 0.48;
+        s.mesh.scale.set(
+          s.size * (1.8 + t * 4.8),
+          s.size * (0.65 + t * 1.5),
+          1,
+        );
+        s.mesh.material.uniforms.opacity.value = Math.sin(Math.PI * t) * 0.53;
       }
     }
     resize(c.viewport);

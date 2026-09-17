@@ -41,7 +41,8 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             record_validation,
-            lifecycle_status
+            lifecycle_status,
+            system_events::sync_lifecycle
         ])
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {

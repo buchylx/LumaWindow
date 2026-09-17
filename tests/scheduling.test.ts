@@ -59,6 +59,26 @@ function fixture() {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("event-driven frame suspension", () => {
+  it("does not resume a sleeping or minimized Mac just because its window becomes visible", async () => {
+    const f = fixture();
+    f.engine.start();
+    await f.load();
+    f.frame(100);
+    f.frame(150);
+    applySystemEvent(f.engine, "occluded");
+    applySystemEvent(f.engine, "screen-sleep");
+    applySystemEvent(f.engine, "minimized");
+    expect(f.callbacks.size).toBe(0);
+    applySystemEvent(f.engine, "visible");
+    applySystemEvent(f.engine, "screen-wake");
+    expect(f.engine.suspended).toBe(true);
+    expect(f.callbacks.size).toBe(0);
+    applySystemEvent(f.engine, "restored");
+    expect(f.callbacks.size).toBe(1);
+    f.frame(100000);
+    expect(f.engine.clock.elapsed).toBeCloseTo(0.05);
+    f.engine.dispose();
+  });
   it("applies parameter changes while paused without advancing activity", async () => {
     const f = fixture();
     f.engine.start();

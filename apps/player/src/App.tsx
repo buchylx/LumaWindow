@@ -218,7 +218,11 @@ export function App() {
             }
           });
           if (canceled) off();
-          else offSystem = off;
+          else {
+            offSystem = off;
+            const { invoke } = await import("@tauri-apps/api/core");
+            if (!canceled) await invoke("sync_lifecycle");
+          }
         })
         .catch((err) => setError(String(err)));
     }

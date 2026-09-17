@@ -5,6 +5,22 @@ export function applySystemEvent(engine: SceneEngine, event: string) {
   let reason: string;
   let suspended: boolean;
   switch (event) {
+    case "screen-sleep":
+      reason = "screen";
+      suspended = true;
+      break;
+    case "screen-wake":
+      reason = "screen";
+      suspended = false;
+      break;
+    case "occluded":
+      reason = "occlusion";
+      suspended = true;
+      break;
+    case "visible":
+      reason = "occlusion";
+      suspended = false;
+      break;
     case "session-lock":
       reason = "session";
       suspended = true;
