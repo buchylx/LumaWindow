@@ -1,0 +1,10 @@
+{
+  "identifier": "control-window",
+  "description": "Local controller event exchange, monitor listing and close",
+  "windows": ["controls"],
+  "permissions": [
+    "core:event:default",
+    "core:window:allow-close",
+    "core:window:allow-available-monitors"
+  ]
+}

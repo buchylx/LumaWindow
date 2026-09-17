@@ -1,0 +1,125 @@
+{
+  "build": "cd32936493138d18",
+  "root": 84788,
+  "generatedAt": "2026-09-17T06:26:19.181Z",
+  "switches": 50,
+  "complete": null,
+  "failures": [],
+  "latest": {
+    "timestamp": "2026-09-17T06:26:11.877Z",
+    "buildId": "cd32936493138d18",
+    "event": "soak-sample",
+    "wallSeconds": 4620.780200000047,
+    "activeSeconds": 4619.5000719909485,
+    "frameMs": 33.40000000037253,
+    "cpuMs": 0.5,
+    "stats": {
+      "geometries": 6,
+      "textures": 2,
+      "calls": 194,
+      "triangles": 2162,
+      "phase": 0.25,
+      "distance": 3708.7155422440183,
+      "cloudSlots": 108,
+      "lastLayout": 4639.048517990948
+    },
+    "hidden": false
+  },
+  "samples": 78,
+  "geometryCounts": [
+    6
+  ],
+  "textureCounts": [
+    2
+  ],
+  "cloudSlots": [
+    108
+  ],
+  "calls": {
+    "min": 169,
+    "median": 196,
+    "p95": 198,
+    "max": 202
+  },
+  "frameMs": {
+    "min": 33.199999999953434,
+    "median": 33.300000000046566,
+    "p95": 33.40000000037253,
+    "max": 33.5
+  },
+  "cpuSubmissionMs": {
+    "min": 0.2999999523162842,
+    "median": 0.40000009536743164,
+    "p95": 0.5999999046325684,
+    "max": 1
+  },
+  "processMemory": {
+    "early5to20min": {
+      "samples": 30,
+      "workingSetMiB": {
+        "min": 364.875,
+        "median": 366.48828125,
+        "p95": 367.47265625,
+        "max": 368.33984375
+      },
+      "privateMiB": {
+        "min": 214.8828125,
+        "median": 217.49609375,
+        "p95": 219.19921875,
+        "max": 219.62109375
+      }
+    },
+    "late100to120min": {
+      "samples": 0,
+      "workingSetMiB": null,
+      "privateMiB": null
+    },
+    "all": {
+      "samples": 153,
+      "workingSetMiB": {
+        "min": 355.08984375,
+        "median": 368.375,
+        "p95": 391.984375,
+        "max": 409.921875
+      },
+      "privateMiB": {
+        "min": 208.60546875,
+        "median": 217.75390625,
+        "p95": 250.8828125,
+        "max": 385.75
+      }
+    },
+    "late45to65min": {
+      "samples": 39,
+      "workingSetMiB": {
+        "min": 368.39453125,
+        "median": 368.7109375,
+        "max": 371.21875
+      },
+      "privateMiB": {
+        "min": 216.76171875,
+        "median": 218.55859375,
+        "max": 229.11328125
+      }
+    }
+  },
+  "cpuAfterWarmup": {
+    "wallSeconds": 4303.0795366,
+    "cpuSeconds": 405.4375,
+    "equivalentSingleCorePercent": 9.422031281354123
+  },
+  "gpu3dPercent": {
+    "min": 0.3147449940397687,
+    "median": 2.8478461563946644,
+    "p95": 5.648907953167558,
+    "max": 6.200134434660916
+  },
+  "notes": [
+    "工作集求和可能重复共享页；私有字节为进程提交口径。",
+    "GPU计数器仅筛选本次应用及后代进程，不是整机功率。",
+    "测试期间有其他办公、浏览器录制等活动，不是严格功耗对照。"
+  ],
+  "stoppedReason": "按用户要求停止阻塞交付的长测，采用1分钟昼夜开发验收。未完成7200秒测试，不标记soak-complete。",
+  "defaultPresetEvidenceMinutes": 69,
+  "runConditionChange": "约第70分钟起相位固定0.25，第71分钟旅行距离重置；末段作为交互运行数据，不能当作相同默认预设的连续性能对照。"
+}

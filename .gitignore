@@ -1,0 +1,19 @@
+node_modules/
+dist/
+target/
+.tools/
+.local/
+20260915-104758.mp4
+docs/references/video-frames/*.png
+*.log
+.DS_Store
+
+# Generated Tauri schemas and local environment settings
+apps/player/src-tauri/gen/
+.env
+.env.*
+!.env.example
+
+# Local validation recordings (keep source and documentation in Git)
+docs/validation/**/*.mp4
+docs/validation/**/*.webm

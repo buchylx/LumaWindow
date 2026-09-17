@@ -1,0 +1,17 @@
+{"timestamp":"2026-09-17T05:07:46.685Z","buildId":"cd32936493138d18","event":"platform-start","details":{"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0"}}
+{"timestamp":"2026-09-17T05:07:46.690Z","buildId":"cd32936493138d18","event":"lifecycle-bridge","details":{"platform":"windows","bridgeInstalled":true,"sessionNotifications":true,"error":null}}
+{"timestamp":"2026-09-17T05:07:46.692Z","buildId":"cd32936493138d18","event":"monitors","details":[{"name":"\\\\.\\DISPLAY1","size":{"width":3840,"height":2160},"scaleFactor":2},{"name":"\\\\.\\DISPLAY2","size":{"width":2160,"height":3840},"scaleFactor":1.75}]}
+{"timestamp":"2026-09-17T05:07:46.711Z","buildId":"cd32936493138d18","event":"fullscreen-entered","details":{}}
+{"timestamp":"2026-09-17T05:07:46.753Z","buildId":"cd32936493138d18","event":"fullscreen-exited","details":{}}
+{"timestamp":"2026-09-17T05:07:47.278Z","buildId":"cd32936493138d18","event":"native-minimized","details":{}}
+{"timestamp":"2026-09-17T05:07:47.347Z","buildId":"cd32936493138d18","event":"native-restored","details":{}}
+{"timestamp":"2026-09-17T05:07:47.383Z","buildId":"cd32936493138d18","event":"display-positioned","details":{"displayIndex":1,"position":{"x":-2160,"y":-928},"innerSize":{"width":2136,"height":3692}}}
+{"timestamp":"2026-09-17T05:07:47.392Z","buildId":"cd32936493138d18","event":"display-fits-workarea","details":{"position":{"x":-2160,"y":-928},"outerSize":{"width":2160,"height":3756},"workArea":{"position":{"x":-2160,"y":-928},"size":{"width":2160,"height":3756}}}}
+{"timestamp":"2026-09-17T05:07:47.446Z","buildId":"cd32936493138d18","event":"offscreen-recovered","details":{"position":{"x":840,"y":24},"size":{"width":2160,"height":2016}}}
+{"timestamp":"2026-09-17T05:07:47.661Z","buildId":"cd32936493138d18","event":"control-handshake","details":{"snapshot":{"audioActive":false,"diagnostics":false,"params":{"cloudShape":0.6,"clouds":0.64,"cycleMinutes":30,"daylight":0.72,"fog":0.28,"framing":0.4,"palette":"mist","speed":0.2,"timeMode":"auto","timeRequest":0},"paused":false,"phase":"ambient","quality":"balanced","reduced":false,"seed":8472,"selection":"auto"},"canvases":0}}
+{"timestamp":"2026-09-17T05:07:48.237Z","buildId":"cd32936493138d18","event":"pause-roundtrip","details":{}}
+{"timestamp":"2026-09-17T05:07:48.298Z","buildId":"cd32936493138d18","event":"resume-roundtrip","details":{}}
+{"timestamp":"2026-09-17T05:07:48.378Z","buildId":"cd32936493138d18","event":"control-closed-player-continues","details":{}}
+{"timestamp":"2026-09-17T05:07:48.439Z","buildId":"cd32936493138d18","event":"graphics-context-lost","details":{}}
+{"timestamp":"2026-09-17T05:07:48.832Z","buildId":"cd32936493138d18","event":"graphics-context-restored","details":{"elapsed":0.5331840000000001,"stats":{"geometries":6,"textures":2,"calls":195,"triangles":2164,"phase":0.7202962133333326,"distance":4.052198400000002,"cloudSlots":108,"lastLayout":0.5331840000000001}}}
+{"timestamp":"2026-09-17T05:07:48.835Z","buildId":"cd32936493138d18","event":"platform-complete","details":{}}

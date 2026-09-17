@@ -1,0 +1,16 @@
+{
+  "build": "cd32936493138d18",
+  "video": ".local/deliverables/phase1-0.1.1/cloudsea-full-day.mp4",
+  "durationSeconds": 1801,
+  "blackDetection": {
+    "events": 0,
+    "pixelThreshold": 0.02,
+    "minimumDuration": 0.1,
+    "pictureThreshold": 0.95
+  },
+  "sceneCutDetection": {
+    "events": 0,
+    "threshold": 0.12
+  },
+  "limitation": "全画面阈值扫描不证明局部贴片没有突现；有损录屏不替代实际程序视觉验收。"
+}
