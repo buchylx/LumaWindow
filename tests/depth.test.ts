@@ -12,6 +12,32 @@ import { createLighting } from "../scenes/cloudsea-railway/lighting";
 import { defaults } from "../scenes/cloudsea-railway/params";
 
 describe("scene depth contract", () => {
+  it("preserves cloud distance contrast in clear weather throughout the day", () => {
+    const geometry = new PlaneGeometry(),
+      nature = createNature(geometry, 8472),
+      lighting = createLighting();
+    const clouds = nature.group.children.filter(
+      (_, i) => natureLayers[i].kind === "cloud",
+    ) as import("three").Mesh<PlaneGeometry, import("three").ShaderMaterial>[];
+    const luminance = (c: import("three").Color) =>
+      0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+    for (const phase of [0, 0.3, 0.48, 0.74, 0.84]) {
+      lighting.update(phase);
+      nature.update(0, 889, 500, { ...defaults, fog: 0 }, lighting);
+      const far = clouds[0].material.uniforms,
+        near = clouds.at(-1)!.material.uniforms;
+      expect(luminance(far.body.value)).toBeGreaterThan(
+        luminance(near.body.value) * 1.7,
+      );
+      expect(luminance(far.shadow.value)).toBeGreaterThan(
+        luminance(near.shadow.value) * 1.5,
+      );
+      expect(far.sunX.value).toBe(lighting.sunX);
+      expect(near.moonX.value).toBe(lighting.moonX);
+    }
+    nature.dispose();
+    geometry.dispose();
+  });
   it("keeps every occluding layer faster than the layer it covers, including the bridge", () => {
     const layers = [
       ...natureLayers.map((l) => ({
@@ -59,6 +85,7 @@ describe("scene depth contract", () => {
     });
     nature.dispose();
     sky.material.dispose();
+    sky.veilMaterial.dispose();
     geo.dispose();
   });
 });

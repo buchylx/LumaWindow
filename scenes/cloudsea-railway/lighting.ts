@@ -132,6 +132,8 @@ export function createLighting() {
     sunY: 0,
     lightX: 0,
     lightY: 1,
+    sunX: 0,
+    moonX: 0,
     update(phase: number, blend = 1) {
       const t = wrap(phase);
       let i = 0;
@@ -151,6 +153,8 @@ export function createLighting() {
       this.night += (night - this.night) * blend;
       this.sunY += (Math.sin((t - 0.25) * Math.PI * 2) - this.sunY) * blend;
       const orbit = celestialOrbit(t);
+      this.sunX = orbit.sun.x * 790;
+      this.moonX = orbit.moon.x * 790;
       this.lightX =
         (orbit.sun.x * (1 - this.night) + orbit.moon.x * this.night) * 0.7;
       this.lightY =
@@ -179,7 +183,11 @@ export function createLighting() {
         .copy(brass)
         .lerp(light, 0.1)
         .multiplyScalar(0.63 - this.night * 0.12);
-      roles.window.copy(dayGlass).lerp(nightGlass, this.night);
+      const windowWarmth = Math.max(
+        this.night,
+        Math.pow(1 - Math.max(0, orbit.sun.altitude), 2) * 0.8,
+      );
+      roles.window.copy(dayGlass).lerp(nightGlass, windowWarmth);
       roles.windowDim.copy(roles.window).lerp(roles.carriage, 0.44);
       roles.steam.copy(body).lerp(light, 0.67);
     },

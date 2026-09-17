@@ -1,3 +1,4 @@
+import { viewHalfHeight } from "./composition";
 import * as T from "three";
 import type {
   CreateContext,
@@ -56,7 +57,8 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
       sky = createSky(geometry, c.seed),
       railway = own(createRailway());
     own(sky.material);
-    scene.add(sky.mesh, nature.group, railway.group);
+    own(sky.veilMaterial);
+    scene.add(sky.mesh, sky.veilMesh, nature.group, railway.group);
     const params = { ...c.params };
     let target = { ...params },
       viewport = c.viewport;
@@ -142,7 +144,7 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
       zoom = 0.75 + params.framing * 0.6;
       const aspect = Math.max(1.45, viewport.aspect);
       halfWidth = (500 * aspect) / zoom;
-      halfHeight = 500 / zoom;
+      halfHeight = viewHalfHeight(params.framing);
       camera.left = -halfWidth;
       camera.right = halfWidth;
       camera.top = halfHeight;

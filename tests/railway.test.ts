@@ -2,8 +2,26 @@ import { describe, it, expect } from "vitest";
 import { Box3, Matrix4 } from "three";
 import { createRailway } from "../scenes/cloudsea-railway/railway";
 import { createLighting } from "../scenes/cloudsea-railway/lighting";
+import { viewHalfHeight } from "../scenes/cloudsea-railway/composition";
 
 describe("parallel railway composition", () => {
+  it("keeps the railway below the vista while zooming and keeps steam attached", () => {
+    const railway = createRailway(),
+      light = createLighting();
+    light.update(0.74);
+    let chimneyOffset: number | undefined;
+    for (const framing of [0, 0.4, 1]) {
+      railway.update(300, 1600, framing, light);
+      const screenY =
+        0.5 - railway.group.position.y / (2 * viewHalfHeight(framing));
+      expect(screenY).toBeCloseTo(0.73);
+      const offset = railway.chimney.y - railway.group.position.y;
+      if (chimneyOffset !== undefined)
+        expect(offset).toBeCloseTo(chimneyOffset);
+      chimneyOffset = offset;
+    }
+    railway.dispose();
+  });
   it("keeps the train horizontal and stationary while bridge piers pass behind it", () => {
     const r = createRailway(),
       light = createLighting();

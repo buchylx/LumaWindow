@@ -1,3 +1,4 @@
+import { railwayElevation } from "./composition";
 import * as T from "three";
 import { fogAtDepth, railwayDepth } from "./depth";
 import { createPassengerTrain } from "./train";
@@ -111,11 +112,11 @@ export function createRailway() {
     update(
       distance: number,
       halfWidth: number,
-      _framing: number,
+      framing: number,
       light: ReturnType<typeof createLighting>,
       fog = 0,
     ) {
-      group.position.y = -140;
+      group.position.y = railwayElevation(framing);
       const start = Math.floor((distance - halfWidth) / span) - 1;
       const count = Math.min(40, Math.ceil((halfWidth * 2) / span) + 4);
       for (let i = 0; i < count; i++) {
@@ -134,7 +135,7 @@ export function createRailway() {
         .add(train.position)
         .add(group.position);
       stone.color.copy(light.colors[5]).lerp(light.colors[2], 0.4);
-      stoneLight.color.copy(light.colors[6]).lerp(light.colors[4], 0.035);
+      stoneLight.color.copy(stone.color).lerp(light.colors[6], 0.32);
       mortar.color.copy(stone.color).multiplyScalar(0.72);
       iron.color.copy(light.colors[5]).multiplyScalar(0.63);
       const veil = fogAtDepth(fog, railwayDepth) * 0.14;
