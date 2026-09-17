@@ -1,14 +1,14 @@
-# Mac 实机测试 · 0.1.3
+# Mac 实机测试 · 0.2.0
 
 测试设备：2019 年 16 英寸 MacBook Pro，Intel，用户报告 macOS 26.6。
 
-本轮提供网页测试包和完整构建源码包。2026-09-17 用户反馈：上述 Mac 的网页版基础体验正常。浏览器种类、持续功耗和长时间稳定性尚未单独记录；原生桌面包待用户后续测试。网页体验通过不代替桌面版的副屏、全屏和生命周期验收。
+本轮提供网页测试包和完整构建源码包；[CI](https://github.com/buchylx/LumaWindow/actions/runs/35213299038) 已分别通过 Intel 与 Apple Silicon 原生编译。2026-09-17 用户反馈：上述 Mac 的 **0.1.3** 网页版基础体验正常；此反馈不能自动延用为 0.2.0 已验收。浏览器种类、持续功耗和长时间稳定性尚未单独记录；原生桌面包待用户后续测试。网页体验通过不代替桌面版的副屏、全屏和生命周期验收。
 
 ## 1. 最快体验：网页测试包
 
-1. 从交付目录取 `LumaWindow-web-0.1.3.zip`，传到 Mac 并解压。
+1. 从交付目录取 `LumaWindow-web-0.2.0.zip`，传到 Mac 并解压。
 2. 安装 [Node.js 24 LTS](https://nodejs.org/en/download) 的 macOS 安装包。命令行 `node -p process.arch` 在这台 Intel Mac 上应输出 `x64`。已装 Node 24 的可跳过。
-3. 打开“终端”，输入 `cd `（末尾有空格），将解压后的 `LumaWindow-web-0.1.3` 文件夹拖进终端，回车。
+3. 打开“终端”，输入 `cd `（末尾有空格），将解压后的 `LumaWindow-web-0.2.0` 文件夹拖进终端，回车。
 4. 执行：
 
 ```bash
@@ -51,7 +51,7 @@ Node 应为 v24 或更新版本；Rust 使用当前 stable。无需另外全局�
 
 ### 构建并打开
 
-1. 将 `LumaWindow-source-0.1.3.zip` 传到 Mac 并解压。
+1. 将 `LumaWindow-source-0.2.0.zip` 传到 Mac 并解压。
 2. 终端 `cd ` 后拖入解压的 **LumaWindow** 文件夹，回车。
 3. 执行：
 
@@ -105,9 +105,9 @@ LumaWindow/.local/mac-build/release/bundle/macos/LumaWindow.app
 
 ## 4. 本次 Mac 测试的已知边界
 
-- Mac 专用的锁屏、睡眠、最小化生命周期桥接尚未实现，不能承诺这些状态下一定停帧节能。浏览器可见性暂停已存在，但不能代替系统事件适配。可记录实际表现，待后续补齐；本轮不以 `--platform-test` 在 Mac 全部通过作为交付声明。
+- 已接入 macOS 官方的系统睡眠、屏幕休眠、用户会话切换、窗口最小化、遮挡与屏幕变化通知。多种暂停原因重叠时，只有全部解除才恢复；切到另一块屏幕工作不应暂停仍然可见的场景。编译通过不代表已实机验证。请分别测试最小化、完全遮挡、锁屏、合盖/唤醒；记录恢复后是否平滑、手动暂停是否仍然保留。锁屏可能经屏幕休眠或遮挡通知反映，不能仅凭会话切换通知假定所有系统版本都覆盖锁屏。
 - 尚未在该 Mac 测量持续功耗和显存，也未验证 2014 年机型。项目中的 macOS 11 最低系统配置只是暂定门槛，不是实测兼容承诺。此次 Node 24 构建工具自身要求 macOS 13.5+，见 [Node 24 官方平台说明](https://github.com/nodejs/node/blob/v24.x/BUILDING.md)。
-- 此次修正覆盖视差、雾感和薄云运动；完整色彩体系、更多连绵山型与稀疏飞鸟仍留到下一轮美术提升。Focus 当前仍是手动阶段预览，未实现完整番茄钟和正式 BGM。
+- 此次包含列车重绘、五时段色彩、连续山脉和沿途组合生成；稀疏飞鸟未纳入本轮。Focus 当前仍是手动阶段预览，未实现完整番茄钟和正式 BGM。
 
 ## 5. 反馈给我的信息
 
@@ -122,3 +122,8 @@ macOS：26.6（或“关于本机”中显示的完整版本）
 画面：昼夜、雾感、速度、暂停是否正常
 问题截图或构建日志：
 ```
+
+
+### Mac 生命周期接口依据
+
+采用 [NSWindow 遮挡状态](https://developer.apple.com/documentation/appkit/nswindow/occlusionstate-swift.property)、[屏幕休眠通知](https://developer.apple.com/documentation/appkit/nsworkspace/screensdidsleepnotification)与[会话切换通知](https://developer.apple.com/documentation/appkit/nsworkspace/sessiondidresignactivenotification)。这些通知的编译接入与实际锁屏/多屏体验分开验收。
