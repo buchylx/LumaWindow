@@ -1,96 +1,97 @@
 import { Color } from "three";
+import { celestialOrbit } from "./celestial";
 import { wrap } from "./day-cycle";
 // Sky, horizon, cloud shade/body/light, rock shade/light; authored in sRGB.
 const keys = [
   [
     0,
-    "#142740",
-    "#8b86a9",
-    "#4c557e",
-    "#8997b8",
-    "#e1d7d5",
-    "#182f42",
-    "#727c9d",
+    "#122a53",
+    "#6e86b1",
+    "#475d94",
+    "#7c97c3",
+    "#c8d9ef",
+    "#182d4e",
+    "#5277a3",
   ],
   [
     0.18,
-    "#445c86",
-    "#dba0ab",
-    "#786786",
-    "#bb9db3",
-    "#f8d2b4",
-    "#304858",
-    "#968899",
+    "#405c91",
+    "#e2aab5",
+    "#795f9b",
+    "#c4a7c5",
+    "#f7d9d4",
+    "#304364",
+    "#8c83ac",
   ],
   [
     0.3,
-    "#77a5bd",
-    "#f8d1a8",
-    "#89788f",
-    "#e2b6af",
-    "#ffedc8",
-    "#314c5c",
-    "#ad8f97",
+    "#6daed5",
+    "#ffe0b2",
+    "#96789e",
+    "#f1bbad",
+    "#fff0d5",
+    "#364c68",
+    "#a78aa8",
   ],
   [
     0.48,
-    "#5798b6",
-    "#ddded0",
-    "#8290b0",
-    "#d4cfcd",
-    "#fff0cd",
-    "#294b57",
-    "#899ba7",
+    "#448fce",
+    "#c9eaf2",
+    "#7799c3",
+    "#d2e4ee",
+    "#fff9e9",
+    "#264e6b",
+    "#679ab7",
   ],
   [
     0.62,
-    "#6d9dbc",
-    "#f8d4ae",
-    "#8c829f",
-    "#e8bab0",
-    "#ffe9be",
-    "#354959",
-    "#aa929e",
+    "#629dd4",
+    "#ffe4c4",
+    "#8d80b1",
+    "#f3c6bb",
+    "#fff3d9",
+    "#3a4e70",
+    "#9897bc",
   ],
   [
     0.74,
-    "#6c86b2",
-    "#fbc08c",
-    "#94768f",
-    "#eeae99",
-    "#ffe3ae",
-    "#394252",
-    "#b48f9a",
+    "#6685bb",
+    "#ffc593",
+    "#886888",
+    "#f09e87",
+    "#ffdfab",
+    "#343b5e",
+    "#ad829f",
   ],
   [
     0.84,
-    "#374c7a",
-    "#d9999f",
-    "#645b8c",
-    "#a190b2",
-    "#efd1c6",
-    "#28374e",
-    "#89849e",
+    "#2d467b",
+    "#d7a0b2",
+    "#645d97",
+    "#a59fc8",
+    "#e7d9e8",
+    "#253459",
+    "#7e80b1",
   ],
   [
     0.94,
-    "#1c3053",
-    "#9093b6",
-    "#515b86",
-    "#929bbe",
-    "#e4d7da",
-    "#1b3046",
-    "#757f9f",
+    "#19305b",
+    "#8599bd",
+    "#4d659b",
+    "#87a0c9",
+    "#d0def1",
+    "#1c3255",
+    "#5c7eaa",
   ],
   [
     1,
-    "#142740",
-    "#8b86a9",
-    "#4c557e",
-    "#8997b8",
-    "#e1d7d5",
-    "#182f42",
-    "#727c9d",
+    "#122a53",
+    "#6e86b1",
+    "#475d94",
+    "#7c97c3",
+    "#c8d9ef",
+    "#182d4e",
+    "#5277a3",
   ],
 ] as const;
 const stops = keys.map(([time, ...colors]) => ({
@@ -129,6 +130,8 @@ export function createLighting() {
     roles,
     night: 0,
     sunY: 0,
+    lightX: 0,
+    lightY: 1,
     update(phase: number, blend = 1) {
       const t = wrap(phase);
       let i = 0;
@@ -147,13 +150,21 @@ export function createLighting() {
           : 1 - dawn * dawn * (3 - 2 * dawn);
       this.night += (night - this.night) * blend;
       this.sunY += (Math.sin((t - 0.25) * Math.PI * 2) - this.sunY) * blend;
+      const orbit = celestialOrbit(t);
+      this.lightX =
+        (orbit.sun.x * (1 - this.night) + orbit.moon.x * this.night) * 0.7;
+      this.lightY =
+        0.45 +
+        (Math.max(0, orbit.sun.altitude) * (1 - this.night) +
+          Math.max(0, orbit.moon.altitude) * this.night) *
+          0.55;
       const [sky, horizon, shade, body, light, rock, rockLight] = colors;
-      roles.cloudNearShade.copy(shade).lerp(violet, 0.19).multiplyScalar(0.68);
-      roles.cloudNearBody.copy(body).lerp(shade, 0.32);
-      roles.cloudFarShade.copy(shade).lerp(horizon, 0.27);
+      roles.cloudNearShade.copy(shade).lerp(violet, 0.1).multiplyScalar(0.8);
+      roles.cloudNearBody.copy(body).lerp(shade, 0.14);
+      roles.cloudFarShade.copy(shade).lerp(horizon, 0.12);
       roles.rockNear.copy(rock).multiplyScalar(0.63);
       roles.rockMiddle.copy(rockLight).lerp(rock, 0.38);
-      roles.rockFar.copy(rockLight).lerp(horizon, 0.3).lerp(blue, 0.1);
+      roles.rockFar.copy(rockLight).lerp(horizon, 0.16).lerp(blue, 0.08);
       roles.carriage
         .copy(green)
         .lerp(rock, 0.28)

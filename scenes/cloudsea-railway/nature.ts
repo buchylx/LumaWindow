@@ -26,83 +26,101 @@ interface Layer {
 export const natureLayers: readonly Layer[] = [
   {
     kind: "mountain",
-    y: -130,
-    height: 430,
-    scale: 640,
+    y: -265,
+    height: 320,
+    scale: 140,
     depth: 0.035,
-    haze: 0.78,
+    haze: 0.4,
     seed: 12,
   },
   {
     kind: "cloud",
-    y: -165,
-    height: 65,
-    scale: 260,
-    depth: 0.06,
-    haze: 0.55,
+    y: -112,
+    height: 44,
+    scale: 250,
+    depth: 0.05,
+    haze: 0.25,
     seed: 27,
   },
   {
     kind: "mountain",
-    y: -380,
-    height: 630,
-    scale: 440,
-    depth: 0.24,
-    haze: 0.44,
-    seed: 39,
+    y: -340,
+    height: 450,
+    scale: 180,
+    depth: 0.08,
+    haze: 0.27,
+    seed: 34,
   },
   {
     kind: "cloud",
-    y: -295,
-    height: 460,
-    scale: 350,
-    depth: 0.18,
-    haze: 0.13,
+    y: -345,
+    height: 630,
+    scale: 390,
+    depth: 0.14,
+    haze: 0.06,
     seed: 51,
   },
   {
     kind: "mountain",
-    y: -450,
-    height: 510,
-    scale: 350,
-    depth: 0.36,
-    haze: 0.26,
-    seed: 63,
+    y: -355,
+    height: 370,
+    scale: 360,
+    depth: 0.22,
+    haze: 0.14,
+    seed: 39,
   },
   {
     kind: "cloud",
     y: -285,
+    height: 220,
+    scale: 245,
+    depth: 0.32,
+    haze: 0.08,
+    seed: 67,
+  },
+  {
+    kind: "mountain",
+    y: -490,
+    height: 390,
+    scale: 295,
+    depth: 0.48,
+    haze: 0.08,
+    seed: 63,
+  },
+  {
+    kind: "cloud",
+    y: -375,
     height: 260,
-    scale: 220,
-    depth: 0.55,
-    haze: 0.13,
+    scale: 210,
+    depth: 0.7,
+    haze: 0.03,
     seed: 76,
   },
   {
     kind: "cloud",
-    y: -455,
-    height: 290,
-    scale: 230,
+    y: -545,
+    height: 370,
+    scale: 240,
     depth: 1.35,
-    haze: 0.08,
+    haze: 0.01,
     seed: 89,
   },
   {
     kind: "mountain",
-    y: -920,
-    height: 970,
-    scale: 320,
+    y: -880,
+    height: 850,
+    scale: 280,
     depth: 1.85,
-    haze: 0.03,
+    haze: 0,
     seed: 104,
   },
   {
     kind: "cloud",
-    y: -670,
+    y: -740,
     height: 370,
-    scale: 230,
+    scale: 250,
     depth: 2.4,
-    haze: 0.02,
+    haze: 0,
     seed: 117,
   },
 ];
@@ -125,6 +143,7 @@ export function createNature(geometry: T.PlaneGeometry, seed: number) {
         journeyStart: { value: 0 },
         journeyRow: { value: (row + 0.5) / natureLayers.length },
         depth: { value: cfg.depth },
+        lightDirection: { value: new T.Vector2(0.5, 0.7) },
         seed: { value: (seed % 8191) * 0.71 + cfg.seed },
         base: { value: cfg.y },
         height: { value: cfg.height },
@@ -142,7 +161,7 @@ export function createNature(geometry: T.PlaneGeometry, seed: number) {
       },
       vertexShader: vertex,
       fragmentShader: `precision highp float;
-        varying vec2 uvScreen;uniform vec2 bounds;
+        varying vec2 uvScreen;uniform vec2 bounds,lightDirection;
         uniform float travel,seed,base,height,size,amount,shape,fog,night,near,warmth,depth;
         uniform sampler2D journeyMap;uniform float journeyStart,journeyRow;
         uniform vec3 shadow,body,light,haze;
@@ -159,61 +178,63 @@ export function createNature(geometry: T.PlaneGeometry, seed: number) {
           ${
             cfg.kind === "cloud"
               ? `
-          // Overlapping seeded billows build a new silhouette at every world
-          // position. Their sizes and elevations follow the larger weather field.
-          float top=base-100.;
-          for(int j=-2;j<=2;j++){
-            float cell=floor(p.x*2.)+float(j);
-            float cx=(cell+.2+hash(vec2(cell,seed))*.6)*.5;
-            float r=.36+hash(vec2(cell,seed+4.))*.3;
-            float dx=p.x-cx;
-            float tower=pow(smoothstep(.22,.87,n(vec2(cx*.47,seed+9.))),1.5);
-            float cap=sqrt(max(0.,1.-dx*dx/(r*r)));
-            float rise=height*(.03+tower*(.16+shape*1.08)*(.32+terrain.y*.95))+r*size*(.45+shape*.22);
-            float clearance=depth>1.?65.*sin(cx*.9+seed):0.;
-            top=max(top,base+(amount-.64)*(depth>1.?140.:370.)+(terrain.x-.55)*130.+rise*cap-clearance);
-
-          }
-          float rough=fb(p*18.+vec2(0,seed));
-          float edge=top-w.y+(rough-.5)*size*.095;
-          if(edge < -4.)discard;
-          float alpha=smoothstep(-1.6,1.6,edge);
-          // Rounded internal billows break into uneven pigment at the edges.
-          // Broad connected pigment masses; no nine-neighbour exponential loop.
-          float pigment=contour(p*3.8+vec2(seed,1.));
-          float brush=fb(vec2(p.x*9.,p.y*11.)+seed);
-          float form=clamp(edge/(size*(.72+shape*.35)),0.,1.);
-          float shade=clamp(.91-form*.58+(pigment-.5)*.8+(brush-.5)*.13,0.,1.);
-          float middle=smoothstep(.27,.45,shade),lit=smoothstep(.65,.75,shade);
-          vec3 col=mix(shadow,body,middle);col=mix(col,light,lit);
-          float rim=(1.-smoothstep(2.,10.,edge))*smoothstep(.50,.72,pigment);
-          col=mix(col,light,rim*.2);
-          // A low-frequency wash, not sparkle or animated grain.
-          col=mix(col,col*vec3(1.035,.98,1.025),n(p*.7+seed)*.35);
+          // A wide weather envelope carries smaller lobes. The same lobes
+          // define the boundary and its painted light, rather than a noise overlay.
+          float weather=n(vec2(p.x*.39,seed+9.));
+          float tower=pow(smoothstep(.30,.85,weather),2.2);
+          float lift=(.12+tower*(.32+shape*1.12))*(.5+terrain.y*.8);
+          if(depth>1.)lift=.10+1.02*smoothstep(.0,1.6,lift);
+          float top=base+height*lift+(amount-.64)*(depth>1.?140.:290.);
+          vec2 q=p*vec2(3.4,3.8);
+          q+=vec2(n(q*.31+seed),n(q*.27-seed))*1.25;
+          float billow=fb(q+seed);
+          float grain=fb(q*4.3+seed);
+          float bulk=(top-w.y)/size;
+          float edge=bulk+(billow-.5)*.85+(grain-.5)*.065;
+          float aa=max(fwidth(edge),.003);
+          if(edge < -aa)discard;
+          float alpha=smoothstep(-aa,aa,edge);
+          // Painted light follows a displaced copy of the same continuous density.
+          // Large cool undersides sit below small warm highlights, without shiny cells.
+          float sunward=fb(q-lightDirection*.48+seed);
+          float illumination=(billow-sunward)*1.7+.53;
+          illumination-=smoothstep(.06,1.45,bulk)*.20;
+          illumination+=(grain-.5)*.13;
+          float middle=smoothstep(.16,.52,illumination);
+          float lit=smoothstep(.57,.78,illumination);
+          vec3 col=mix(shadow,body,middle);col=mix(col,light,lit*.75);
+          float rim=(1.-smoothstep(.025,.13,edge));
+          col=mix(col,light,rim*smoothstep(.32,.62,illumination)*.65);
           `
               : `
-          // Ridged terrain with independent valleys. The near layer has long
-          // openings between landforms, leaving the train visible most of the time.
-          float rolling=.25+.56*n(vec2(p.x*.58,seed+12.))+.17*n(vec2(p.x*1.6,seed+8.));
-          float spine=1.-abs(2.*n(vec2(p.x*.68,seed+3.))-1.);
-          float chain=.10+.68*pow(spine,1.35)+.19*(1.-abs(2.*n(vec2(p.x*2.3,seed+3.))-1.));
-          float islands=pow(smoothstep(.24,.82,ridge),2.1);
-          float massif=mix(mix(rolling,chain,terrain.z),islands,terrain.w*.85);
-          if(near>.5)massif=pow(smoothstep(.34,.82,ridge),2.3);
-          float teeth=abs(n(vec2(p.x*4.1,seed+4.))-.5)*.13+abs(n(vec2(p.x*12.7,seed+2.))-.5)*.045;
-          float top=base+height*(massif*(.56+terrain.z*.6)+teeth);
+          // Intersecting ridges and shoulders with open valleys. A single
+          // continuous height field is sampled in world space, including near hills.
+          float broad=n(vec2(p.x*.51,seed+5.));
+          float ridgeA=1.-abs(2.*n(vec2(p.x*1.05,seed+11.))-1.);
+          float ridgeB=n(vec2(p.x*2.7,seed+3.));
+          float massif=pow(broad,1.5)*.65+ridgeA*.31+ridgeB*.12;
+          massif*=.65+terrain.z*.65;
+          if(near>.5)massif=pow(smoothstep(.42,.87,broad),2.8)*.93;
+          float top=base+height*massif;
+          top+=(fb(vec2(p.x*7.,seed))-.5)*height*.035;
           float edge=top-w.y;
-          if(edge < -2.)discard;
-          float alpha=smoothstep(-1.2,1.2,edge);
-          float strokes=fb(vec2(p.x*5.5+p.y*1.4,p.y*2.1)+seed);
-          float face=strokes+n(vec2(p.x*9.+p.y*2.2,seed))*.16;
-          vec3 col=mix(shadow,body,smoothstep(.32,.65,face)*.72);
-          col=mix(col,light,smoothstep(.61,.76,face)*.38*(1.-near*.6));
-          col=mix(col,shadow,smoothstep(80.,height,edge)*.24);
+          float aa=max(fwidth(edge),.65);
+          if(edge < -aa)discard;
+          float alpha=smoothstep(-aa,aa,edge);
+          float below=(top-w.y)/height;
+          // Angular, broad washes follow oblique ridges, not vertical blurred stripes.
+          vec2 rock=vec2(p.x*2.4+p.y*.7,p.y*2.1);
+          float facet=n(rock+seed)*.6+n(rock*2.2+7.)*.3;
+          float direction=lightDirection.x*(n(vec2(p.x*2.,seed+1.))-.5);
+          float face=smoothstep(.34,.54,facet+direction*.2-below*.08);
+          vec3 col=mix(shadow,body,face);
+          col=mix(col,light,smoothstep(.62,.74,facet+direction*.15)*.25);
+          // A faint vein is a broad value change, never a thin moving line.
+          col=mix(col,shadow,smoothstep(.5,.95,below)*.16);
           `
           }
           col*=vec3(1.+warmth*.13,1.,1.-warmth*.12);
-          col=mix(col,haze,clamp(fog*(.78+.22*(1.-smoothstep(-360.,180.,w.y))),0.,.96));
+          col=mix(col,haze,clamp(fog*(.40+.48*(1.-smoothstep(-380.,60.,w.y))),0.,.96));
           gl_FragColor=vec4(col,alpha);
           #include <colorspace_fragment>
         }`,
@@ -244,7 +265,8 @@ export function createNature(geometry: T.PlaneGeometry, seed: number) {
         u.journeyStart.value = journey.starts[i];
         u.amount.value = params.clouds;
         u.shape.value = params.cloudShape;
-        u.fog.value = fogAtDepth(params.fog, cfg.depth, cfg.haze * 0.2);
+        u.fog.value = fogAtDepth(params.fog, cfg.depth, cfg.haze * 0.12);
+        u.lightDirection.value.set(lighting.lightX, lighting.lightY);
         u.night.value = lighting.night;
         u.warmth.value =
           params.palette === "warm" ? 1 : params.palette === "blue" ? -1 : 0;
@@ -254,6 +276,8 @@ export function createNature(geometry: T.PlaneGeometry, seed: number) {
             .copy(cfg.depth > 1 ? roles.cloudNearShade : roles.cloudFarShade)
             .lerp(shadow, cfg.depth > 0.1 && cfg.depth < 1 ? 0.7 : 0);
           u.body.value.copy(cfg.depth > 1 ? roles.cloudNearBody : body);
+          if (cfg.depth > 1) u.body.value.lerp(shadow, 0.22);
+
           u.light.value.copy(light).lerp(body, cfg.depth < 0.1 ? 0.15 : 0);
         } else {
           u.shadow.value.copy(
@@ -272,6 +296,7 @@ export function createNature(geometry: T.PlaneGeometry, seed: number) {
                   : rockLight,
             )
             .lerp(u.shadow.value, cfg.depth > 1 ? 0.7 : 0.12);
+          if (cfg.depth < 0.1) u.body.value.lerp(rockLight, 0.32);
           u.light.value
             .copy(cfg.depth > 1 ? roles.rockMiddle : rockLight)
             .lerp(body, cfg.depth < 0.1 ? 0.16 : 0.09);
@@ -296,18 +321,23 @@ export function createSky(geometry: T.PlaneGeometry, seed: number) {
       top: { value: new T.Color() },
       horizon: { value: new T.Color() },
       light: { value: new T.Color() },
+      lightDirection: { value: new T.Vector2(0.5, 0.7) },
       night: { value: 0 },
       bounds: { value: new T.Vector2(889, 500) },
       travel: { value: 0 },
       seed: { value: seed % 8191 },
     },
     vertexShader: vertex,
-    fragmentShader: `precision highp float;varying vec2 uvScreen;uniform vec3 top,horizon,light;uniform float night,travel,seed;uniform vec2 bounds;${noise}
+    fragmentShader: `precision highp float;varying vec2 uvScreen;uniform vec3 top,horizon,light;uniform float night,travel,seed;uniform vec2 bounds,lightDirection;${noise}
     void main(){vec2 p=(uvScreen-.5)*bounds*2.;
       vec3 col=mix(horizon,top,smoothstep(-170.,500.,p.y));
-      vec2 q=vec2((p.x+travel)/650.+seed,p.y/32.);
-      float wisps=contour(q);float veil=smoothstep(.63,.70,wisps)*smoothstep(-40.,150.,p.y);
-      col=mix(col,light,veil*.42);
+      vec2 q=vec2((p.x+travel)/470.+seed,p.y/42.);
+      float wisps=contour(q+vec2(n(q*.4),0.));
+      float breakUp=smoothstep(.3,.65,n(q*vec2(1.6,.25)+8.));
+      float veil=smoothstep(.56,.69,wisps)*breakUp*smoothstep(-60.,180.,p.y);
+      col=mix(col,light,veil*.27);
+      float clearOpening=exp(-pow((p.x-lightDirection.x*600.)/750.,2.));
+      col=mix(col,horizon,clearOpening*.10*(1.-smoothstep(-120.,260.,p.y)));
       vec2 s=vec2(p.x,p.y)*.14;float star=step(.989,hash(floor(s)+seed))*(1.-smoothstep(.02,.12,length(fract(s)-.5)));
       col=mix(col,light,star*night*.6*smoothstep(20.,200.,p.y));
       gl_FragColor=vec4(col,1.);

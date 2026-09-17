@@ -7,6 +7,7 @@ import type {
 } from "../../packages/scene-sdk/src";
 import { random } from "../../packages/scene-sdk/src";
 import { validateParams, type Params } from "./params";
+import { celestialOrbit } from "./celestial";
 import { DayCycle } from "./day-cycle";
 import { createLighting } from "./lighting";
 import { createRailway } from "./railway";
@@ -28,7 +29,7 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
   if (c.signal.aborted) throw Error("场景加载已取消");
   const renderer = new T.WebGLRenderer({
     canvas: c.canvas,
-    antialias: false,
+    antialias: true,
     alpha: false,
     powerPreference: "low-power",
   });
@@ -87,7 +88,7 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
       fragmentShader: `varying vec2 vUv;uniform float opacity;void main(){vec2 q=vUv*2.-1.;float a=1.-smoothstep(.98,1.,length(q));
     float spots=0.;
     for(int i=0;i<14;i++){float k=float(i);vec2 centre=vec2(sin(k*17.13),sin(k*43.71))*.76;float r=.10+fract(sin(k*7.31)*431.7)*.22;spots+= (1.-smoothstep(r*.4,r,length(q-centre)))*.13;}
-    vec3 col=mix(vec3(1.,.93,.77),vec3(.70,.62,.48),min(.65,spots));
+    vec3 col=mix(vec3(.84,.91,1.),vec3(.39,.52,.72),min(.72,spots*1.7));
     gl_FragColor=vec4(col,a*opacity);
     #include <colorspace_fragment>
     }`,
@@ -119,22 +120,19 @@ export async function create(c: CreateContext): Promise<SceneInstance> {
       u.horizon.value.copy(horizon);
       u.light.value.copy(light);
       u.night.value = lighting.night;
+      u.lightDirection.value.set(lighting.lightX, lighting.lightY);
       u.travel.value = skyOffset(distance, windDistance);
       u.bounds.value.set(halfWidth, halfHeight);
       nature.update(distance, halfWidth, halfHeight, params, lighting);
-      sun.position.set(
-        halfWidth * 0.59,
-        Math.max(-80, lighting.sunY * 260 - 80),
-        0,
-      );
-      sun.scale.setScalar(40);
-      sunMat.opacity = 1 - lighting.night;
-      moon.position.set(halfWidth * 0.5, 260, 0);
-      moon.scale.set(106, 106, 1);
-      moonMat.uniforms.opacity.value = Math.max(
-        0,
-        (lighting.night - 0.25) / 0.75,
-      );
+      const orbit = celestialOrbit(clock.phase);
+      const place = (mesh: T.Mesh, body: { x: number; altitude: number }) =>
+        mesh.position.set(body.x * 790, -90 + body.altitude * 455, 0);
+      place(sun, orbit.sun);
+      place(moon, orbit.moon);
+      sun.scale.setScalar(35);
+      sunMat.opacity = orbit.sunOpacity;
+      moon.scale.set(83, 83, 1);
+      moonMat.uniforms.opacity.value = orbit.moonOpacity;
       railway.update(distance, halfWidth, params.framing, lighting, params.fog);
       smoke.forEach((s) =>
         s.mesh.material.uniforms.color.value.copy(lighting.roles.steam),

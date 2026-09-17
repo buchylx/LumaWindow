@@ -46,25 +46,6 @@ export function createRailway() {
     s.closePath();
     parts[layer].push(new T.ShapeGeometry(s));
   }
-  function line(
-    parts: T.BufferGeometry[][],
-    layer: number,
-    x: number,
-    y: number,
-    x2: number,
-    y2: number,
-    width: number,
-  ) {
-    rect(
-      parts,
-      layer,
-      (x + x2) / 2,
-      (y + y2) / 2,
-      Math.hypot(x2 - x, y2 - y),
-      width,
-      Math.atan2(y2 - y, x2 - x),
-    );
-  }
   // Elliptical arch with tapered piers, cornice, individual voussoirs and coping.
   const span = 210,
     radius = 89,
@@ -85,39 +66,20 @@ export function createRailway() {
   bridgeParts[0].push(new T.ShapeGeometry(arch));
   rect(bridgeParts, 1, 0, -3, 210, 4);
   rect(bridgeParts, 2, 0, -9, 210, 1.2);
-  for (let j = 0; j < 24; j++) {
-    const a = (j / 24) * Math.PI,
-      b = ((j + 1) / 24) * Math.PI;
+  // Broad arch intrados and a quiet continuous parapet. No subpixel pickets
+  // or repeated bright mortar marks that scintillate during lateral motion.
+  for (let j = 0; j < 32; j++) {
+    const a = (j / 32) * Math.PI,
+      b = ((j + 1) / 32) * Math.PI;
     poly(bridgeParts, 1, [
       [Math.cos(a) * 89, spring + Math.sin(a) * 65],
       [Math.cos(b) * 89, spring + Math.sin(b) * 65],
-      [Math.cos(b) * 95, spring + Math.sin(b) * 72],
-      [Math.cos(a) * 95, spring + Math.sin(a) * 72],
+      [Math.cos(b) * 96, spring + Math.sin(b) * 73],
+      [Math.cos(a) * 96, spring + Math.sin(a) * 73],
     ]);
-    line(
-      bridgeParts,
-      2,
-      Math.cos(a) * 90,
-      spring + Math.sin(a) * 66,
-      Math.cos(a) * 96,
-      spring + Math.sin(a) * 73,
-      0.65,
-    );
   }
-  for (let row = 0; row < 17; row++) {
-    const y = -27 - row * 23;
-    const opening =
-      y > spring
-        ? radius * Math.sqrt(Math.max(0, 1 - ((y - spring) / 65) ** 2))
-        : radius;
-    const width = Math.max(0, 105 - opening - 2);
-    rect(bridgeParts, 2, -(105 + opening + 2) / 2, y, width, 0.6);
-    rect(bridgeParts, 2, (105 + opening + 2) / 2, y, width, 0.6);
-  }
-  rect(bridgeParts, 1, 99, -243, 2.2, 350);
-  rect(bridgeParts, 3, 0, 2, 210, 1.5);
-  rect(bridgeParts, 3, 0, 8, 210, 0.9);
-  for (let j = 0; j < 21; j++) rect(bridgeParts, 3, -100 + j * 10, 5, 0.6, 6);
+  rect(bridgeParts, 2, 99, -246, 5.5, 345);
+  rect(bridgeParts, 3, 0, 3.5, 210, 3);
   const bridges: T.InstancedMesh[] = [];
   function batch(
     parts: T.BufferGeometry[][],
@@ -172,10 +134,10 @@ export function createRailway() {
         .add(train.position)
         .add(group.position);
       stone.color.copy(light.colors[5]).lerp(light.colors[2], 0.4);
-      stoneLight.color.copy(light.colors[6]).lerp(light.colors[4], 0.12);
-      mortar.color.copy(stone.color).multiplyScalar(0.83);
+      stoneLight.color.copy(light.colors[6]).lerp(light.colors[4], 0.035);
+      mortar.color.copy(stone.color).multiplyScalar(0.72);
       iron.color.copy(light.colors[5]).multiplyScalar(0.63);
-      const veil = fogAtDepth(fog, railwayDepth) * 0.28;
+      const veil = fogAtDepth(fog, railwayDepth) * 0.14;
       passengerTrain.update(light, veil);
       for (const mat of [stone, stoneLight, mortar, iron]) {
         mat.color.lerp(light.colors[1], veil);

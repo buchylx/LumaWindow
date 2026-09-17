@@ -137,6 +137,7 @@ export function createPassengerTrain() {
     () =>
       new T.MeshBasicMaterial({
         transparent: true,
+        vertexColors: true,
         depthTest: false,
         depthWrite: false,
       }),
@@ -144,6 +145,22 @@ export function createPassengerTrain() {
   const geometries = parts.map((list, i) => {
     const g = mergeGeometries(list);
     list.forEach((p) => p.dispose());
+    // Broad tonal planes survive the distant viewing scale without fine moving trim.
+    const position = g.getAttribute("position");
+    const shades = new Float32Array(position.count * 3);
+    for (let v = 0; v < position.count; v++) {
+      const y = position.getY(v);
+      const tone =
+        i === 0
+          ? 0.7 + Math.max(0, Math.min(1, (y - 7) / 17)) * 0.3
+          : i === 3
+            ? 0.72 + Math.max(0, Math.min(1, (y - 9) / 14)) * 0.28
+            : i >= 5
+              ? 0.78 + Math.max(0, Math.min(1, (y - 14) / 6)) * 0.22
+              : 1;
+      shades.set([tone, tone, tone], v * 3);
+    }
+    g.setAttribute("color", new T.BufferAttribute(shades, 3));
     const mesh = new T.Mesh(g, materials[i]);
     mesh.renderOrder = 48 + i;
     group.add(mesh);
